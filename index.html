@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>To-Do List App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .task-input {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .task-input input, .task-input select {
+      padding: 10px;
+      font-size: 16px;
+      flex: 1;
+    }
+    .task-input button {
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .filters {
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    .filters button {
+      margin: 0 5px;
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+    .task-list li {
+      list-style: none;
+      margin: 10px 0;
+      padding: 10px;
+      background: #f1f1f1;
+      display: flex;
+      justify-content: space-between;
+      border-radius: 5px;
+    }
+    .done span {
+      text-decoration: line-through;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>To-Do List</h1>
+    <div class="task-input">
+      <input type="text" id="taskInput" placeholder="Enter a task..." />
+      <select id="priority">
+        <option value="High">High</option>
+        <option value="Medium" selected>Medium</option>
+        <option value="Low">Low</option>
+      </select>
+      <button onclick="addTask()">Add</button>
+    </div>
+
+    <div class="filters">
+      <button onclick="setFilter('All')">All</button>
+      <button onclick="setFilter('Completed')">Completed</button>
+      <button onclick="setFilter('Incomplete')">Incomplete</button>
+    </div>
+
+    <ul id="taskList" class="task-list"></ul>
+  </div>
+
+  <script>
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+    let currentFilter = 'All';
+
+    function saveTasks() {
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    function addTask() {
+      const input = document.getElementById('taskInput');
+      const priority = document.getElementById('priority').value;
+      const text = input.value.trim();
+      if (!text) return;
+      tasks.push({ id: Date.now(), text, completed: false, priority });
+      input.value = '';
+      saveTasks();
+      renderTasks();
+    }
+
+    function toggleTask(id) {
+      tasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+      saveTasks();
+      renderTasks();
+    }
+
+    function deleteTask(id) {
+      tasks = tasks.filter(t => t.id !== id);
+      saveTasks();
+      renderTasks();
+    }
+
+    function setFilter(filter) {
+      currentFilter = filter;
+      renderTasks();
+    }
+
+    function renderTasks() {
+      const list = document.getElementById('taskList');
+      list.innerHTML = '';
+
+      const filtered = tasks.filter(task => {
+        if (currentFilter === 'All') return true;
+        return currentFilter === 'Completed' ? task.completed : !task.completed;
+      });
+
+      filtered.forEach(task => {
+        const li = document.createElement('li');
+        li.className = task.completed ? 'done' : '';
+
+        const span = document.createElement('span');
+        span.textContent = `${task.text} (${task.priority})`;
+        span.style.cursor = 'pointer';
+        span.onclick = () => toggleTask(task.id);
+
+        const delBtn = document.createElement('button');
+        delBtn.textContent = '❌';
+        delBtn.onclick = () => deleteTask(task.id);
+
+        li.appendChild(span);
+        li.appendChild(delBtn);
+        list.appendChild(li);
+      });
+    }
+
+    renderTasks();
+  </script>
+</body>
+</html>
